@@ -2,7 +2,7 @@ namespace AvantOfCode;
 
 public class Day3
 {
-    public int Handle1(string[] input)
+    public int Challenge1(string[] input)
     {
         var result = 0;
 
@@ -31,7 +31,7 @@ public class Day3
         return result;
     }
     
-    public int Handle2(string[] input)
+    public int Challenge2(string[] input)
     {
         var result = 0;
 

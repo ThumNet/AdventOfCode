@@ -2,7 +2,7 @@ namespace AvantOfCode;
 
 public class Day2
 {
-    public int Handle1(string[] lines)
+    public int Challenge1(string[] lines)
     {
         int sum = 0;
         foreach (var line in lines)
@@ -36,7 +36,7 @@ public class Day2
         return sum;
     }
 
-    public int Handle2(string[] lines)
+    public int Challenge2(string[] lines)
     {
         int sum = 0;
         foreach (var line in lines)
