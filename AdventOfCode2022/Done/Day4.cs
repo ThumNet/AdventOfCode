@@ -1,4 +1,6 @@
-namespace AvantOfCode;
+using Helpers;
+
+namespace AvantOfCode2022.Done;
 
 public class Day4
 {

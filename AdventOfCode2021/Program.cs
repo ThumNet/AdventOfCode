@@ -1,4 +1,4 @@
-﻿using AvantOfCode2022;
+﻿using AdventOfCode2021;
 
 var input = File.ReadAllLines(@"input.txt");
 

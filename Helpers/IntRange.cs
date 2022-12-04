@@ -1,4 +1,4 @@
-namespace AvantOfCode;
+namespace Helpers;
 
 public class IntRange
 {
