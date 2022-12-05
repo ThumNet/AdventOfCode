@@ -5,11 +5,11 @@ public static class TwoDimensionalArray
 {
     public static int[,] Create(int rows, int columns) => new int[rows, columns];
 
-    public static int Sum(this int[,] array) => array.Cast<int>().Sum();
+    public static int Sum<T>(this T[,] array, Func<T, int> selector) => array.Cast<T>().Sum(selector);
 
-    public static int[] ItemsInRow(this int[,] array, int rowIndex)
+    public static T[] ItemsInRow<T>(this T[,] array, int rowIndex)
     {
-        var result = new List<int>();
+        var result = new List<T>();
         for (var i = 0; i < array.GetLength(1); i++)
         {
             result.Add(array[rowIndex, i]);
@@ -17,10 +17,30 @@ public static class TwoDimensionalArray
 
         return result.ToArray();
     }
-    
-    public static int[] ItemsInColumn(this int[,] array, int columnIndex)
+
+    public static bool Contains<T>(this T[,] array, Func<T, bool> predicate)
     {
-        var result = new List<int>();
+        for (var r = 0; r < array.GetLength(0); r++)
+        for (var c = 0; c < array.GetLength(1); c++)
+        {
+            if (predicate(array[r,c])) return true;
+        }
+        return false;
+    }
+    
+    public static (int row, int col) LocationOf<T>(this T[,] array, Func<T, bool> predicate)
+    {
+        for (var r = 0; r < array.GetLength(0); r++)
+        for (var c = 0; c < array.GetLength(1); c++)
+        {
+            if (predicate(array[r,c])) return (r,c);
+        }
+        return (-1, -1);
+    }
+    
+    public static T[] ItemsInColumn<T>(this T[,] array, int columnIndex)
+    {
+        var result = new List<T>();
         for (var i = 0; i < array.GetLength(0); i++)
         {
             result.Add(array[i, columnIndex]);
