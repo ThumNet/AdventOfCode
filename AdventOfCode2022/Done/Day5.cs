@@ -25,14 +25,17 @@ public class Day5
 
         foreach (var move in moves)
         {
-            for (var i = 0; i < move.Amount; i++)
-            {
-                var temp = stacks[move.From].Take(1);
-                stacks[move.To].InsertRange(0, temp);
-                stacks[move.From].RemoveRange(0, 1);
-            }
+            // for (var i = 0; i < move.Amount; i++)
+            // {
+            //     var temp = stacks[move.From].Take(1);
+            //     stacks[move.To].InsertRange(0, temp);
+            //     stacks[move.From].RemoveRange(0, 1);
+            // }
+            var temp = stacks[move.From].Take(move.Amount).Reverse().ToArray();
+            stacks[move.To].InsertRange(0, temp);
+            stacks[move.From].RemoveRange(0, move.Amount);
 
-            stacks.Dump();
+            //stacks.Dump();
         }
 
         var outcome = "";
@@ -61,12 +64,12 @@ public class Day5
             }
         }
 
-        for (var i = 0; i < stacksLines.Count - 1; i++) // minus 1 because the numbers dont matter
+        for (var i = 0; i < stacks.Count - 1; i++) // minus 1 because the numbers dont matter
         {
             stacks[i] = stacks[i].Where(s => s != ' ').ToList();
         }
 
-        stacks.Dump();
+        //stacks.Dump();
 
         return stacks;
     }
@@ -109,7 +112,7 @@ public class Day5
             stacks[move.To].InsertRange(0, temp);
             stacks[move.From].RemoveRange(0, move.Amount);
 
-            stacks.Dump();
+            //stacks.Dump();
         }
 
         var outcome = "";
