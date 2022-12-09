@@ -1,13 +1,13 @@
 namespace Helpers;
 
-public struct Point
+public class Point
 {
     public Point(int x, int y)
     {
         X = x;
         Y = y;
     }
-    
+
     public int X { get; set; }
     public int Y { get; set; }
 
@@ -15,6 +15,11 @@ public struct Point
     {
         return $"x={X},y={Y}";
     }
+
+    public void Up(int amount = 1) => Y -= amount;
+    public void Down(int amount = 1) => Y += amount;
+    public void Right(int amount = 1) => X += amount;
+    public void Left(int amount = 1) => X -= amount;
 
     public bool MeetHorizontal(Point other) => X == other.X;
     public bool MeetVertical(Point other) => Y == other.Y;
@@ -55,13 +60,33 @@ public struct Point
         }
     }
 
+    public override bool Equals(object? obj)
+    {
+        if (obj is Point other)
+        {
+            return other.X == X && other.Y == Y;
+        }
+
+        return base.Equals(obj);
+    }
+
+    protected bool Equals(Point other)
+    {
+        return X == other.X && Y == other.Y;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(X, Y);
+    }
+
     public static Point From(string input, string separator)
     {
         var parts = input.Split(separator);
         if (parts.Length != 2)
             throw new ArgumentOutOfRangeException(nameof(input),
                 $"Could not split '{input}' into 2 parts with separator '{separator}'");
-        
+
         return new Point(int.Parse(parts[0]), int.Parse(parts[1]));
     }
 }
