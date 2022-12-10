@@ -26,6 +26,21 @@ public class IntRange
         return Start >= other.Start && End <= other.End;
     }
 
+
+    public int SumOfRange() => SumOfRange(Start, End);
+    
+    /// <summary>
+    /// Sum of Range start - end
+    /// For example (start=1, end=10) 1,2,3,4,5,6,7,8,9,10 = 55
+    /// Or (start=5, end=8)  5,6,7,8 = 26
+    /// </summary>
+    public static int SumOfRange(int start, int end)
+    {
+        return start == 1 
+            ? end * (end + 1) / 2
+            : SumOfRange(1, end) - SumOfRange(1, start-1);
+    }
+
     public override string ToString()
     {
         return $"{Start}-{End}";
