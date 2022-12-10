@@ -1,6 +1,6 @@
 using Helpers;
 
-namespace AvantOfCode2022.Done;
+namespace AdventOfCode2022.Done;
 
 public class Day4
 {

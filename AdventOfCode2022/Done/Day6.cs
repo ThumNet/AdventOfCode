@@ -1,4 +1,4 @@
-namespace AvantOfCode2022;
+namespace AdventOfCode2022.Done;
 
 public class Day6
 {

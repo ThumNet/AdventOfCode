@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using AvantOfCode2022;
+using AdventOfCode2022;
 
 var input = File.ReadAllLines(@"input.txt");
 

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace AvantOfCode2022;
+namespace AdventOfCode2022.Done;
 
 public class Day7
 {
