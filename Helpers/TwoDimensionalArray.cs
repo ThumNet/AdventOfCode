@@ -4,6 +4,19 @@ namespace System;
 public static class TwoDimensionalArray
 {
     public static int[,] Create(int rows, int columns) => new int[rows, columns];
+    
+    public static T[,] Create<T>(int rows, int columns, T defaultValue)
+    {
+        var array = new T[rows, columns];
+        for (var i = 0; i < rows; i++)
+        {
+            for (var j = 0; j < columns; j++)
+            {
+                array[i, j] = defaultValue;
+            }
+        }
+        return array;
+    }
 
     public static int Sum<T>(this T[,] array, Func<T, int> selector) => array.Cast<T>().Sum(selector);
 
