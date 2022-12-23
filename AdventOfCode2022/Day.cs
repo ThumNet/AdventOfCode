@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using Helpers;
 
@@ -10,7 +11,7 @@ public class Day
         long result = 0;
 
         var puzzle = new Puzzle(input.Take(input.Length - 2).ToList(), input.Last());
-        puzzle.Walk();
+        result = puzzle.Walk();
 
         return result;
     }
@@ -28,12 +29,14 @@ public class Day
 
         private Point _direction;
         private Point _pos;
+        private readonly char[,] _draw;
 
         public Puzzle(List<string> map, string directions)
         {
             _maxX = map.Max(s => s.Length);
             _maxY = map.Count;
             _map = TwoDimensionalArray.Create(_maxY, _maxX, ' ');
+            _draw = TwoDimensionalArray.Create(_maxY, _maxX, ' ');
             FillMap(map);
             _directions = directions;
             _direction = Right;
@@ -47,6 +50,7 @@ public class Day
                 for (int x = 0; x < map[y].Length; x++)
                 {
                     _map[y, x] = map[y][x];
+                    _draw[y, x] = map[y][x];
                 }
             }
         }
@@ -56,33 +60,31 @@ public class Day
             Console.WriteLine($"Move {amount}");
             for (int i = 0; i < amount; i++)
             {
-                _map[_pos.Y, _pos.X] = DirectionInd();
+                _draw[_pos.Y, _pos.X] = DirectionInd();
 
-                Draw();
-                var next = GetNextPos();
+                //Draw();
+                var (can, next) = GetNextPos();
+                if (!can) break;
                 var c = _map[next.Y, next.X];
                 if (c == '#') break;
-                if (c == ' ') WrapAround();
-                else _pos = next;
+                _pos = next;
             }
         }
 
         private void Draw()
         {
-            Console.Clear();
             for (int i = 0; i < _maxY; i++)
             {
-                Console.WriteLine(_map.ItemsInRow(i));
+                Console.WriteLine(new string(_draw.ItemsInRow(i)));
             }
         }
 
         private char DirectionInd()
         {
-            if (_direction.Equals(Right)) return '>';
-            if (_direction.Equals(Left)) return '<';
-            if (_direction.Equals(Up)) return '^';
-            return 'v';
+            return _direction.Equals(Right) ? '>' : _direction.Equals(Left) ? '<' : _direction.Equals(Up) ? '^' : 'v';
         }
+
+        public char At(Point p) => _map[p.Y, p.X];
 
         private (bool, Point) GetNextPos()
         {
@@ -91,8 +93,14 @@ public class Day
             {
                 if (_pos.Y == 0 || _map[next.Y, next.X] == ' ')
                 {
-                    // wrapdown
-                    return (false, next);
+                    var p = _pos + Down;
+                    while (p.Y < _maxY-1)
+                    {
+                        if (At(p + Down) == ' ') return (At(p) == '.', p);
+                        p += Down;
+                    }
+                    
+                    return (At(p) == '.', p);
                 }
 
                 return (true, next);
@@ -100,10 +108,16 @@ public class Day
 
             if (_direction.Equals(Down))
             {
-                if (_pos.Y == _maxY || _map[next.Y, next.X] == ' ')
+                if (_pos.Y == _maxY-1 || _map[next.Y, next.X] == ' ')
                 {
-                    // wrapup
-                    return (false, next);
+                    var p = _pos + Up;
+                    while (p.Y > 0)
+                    {
+                        if (At(p + Up) == ' ') return (At(p) == '.', p);
+                        p += Up;
+                    }
+                    
+                    return (At(p) == '.', p);
                 }
 
                 return (true, next);
@@ -113,77 +127,31 @@ public class Day
             {
                 if (_pos.X == 0 || _map[next.Y, next.X] == ' ')
                 {
-                    // wrapright
-                    return (false, next);
+                    var p = _pos + Right;
+                    while (p.X < _maxX-1)
+                    {
+                        if (At(p + Right) == ' ') return (At(p) == '.', p);
+                        p += Right;
+                    }
+                    
+                    return (At(p) == '.', p);
                 }
 
                 return (true, next);
             }
 
             // Right
-            if (_pos.X == _maxX || _map[next.Y, next.X] == ' ')
+            if (_pos.X == _maxX-1 || _map[next.Y, next.X] == ' ')
             {
-                // wrapleft
-                return (false, next);
+                var p = _pos + Left;
+                while (p.X > 0)
+                {
+                    if (At(p + Left) == ' ') return (At(p) == '.', p);
+                    p += Left;
+                }
+                return (At(p) == '.', p);
             }
             return (true, next);
-        }
-
-        private void WrapAround()
-        {
-            if (_direction.Equals(Right)) WrapLeft();
-            else if (_direction.Equals(Left)) WrapRight();
-            else if (_direction.Equals(Up)) WrapDown();
-            else WrapUp();
-        }
-
-        private void WrapDown()
-        {
-            var y = _pos.Y;
-            while (y++ < _maxY)
-            {
-                if (_map[y, _pos.X] == ' ') break;
-            }
-
-            _pos = new Point(_pos.X, y--);
-        }
-
-        private void WrapUp()
-        {
-            var y = _pos.Y;
-            while (y-- > 0)
-            {
-                if (_map[y, _pos.X] == ' ') break;
-            }
-
-            _pos = new Point(_pos.X, y++);
-        }
-
-        private void WrapLeft()
-        {
-            var x = -1;
-            while (x++ < _maxX)
-            {
-                if (_map[_pos.Y, x] != ' ') break;
-            }
-
-            _pos = new Point(x--, _pos.Y);
-        }
-
-        private void WrapRight()
-        {
-            var x = _;
-            while (x 1 < _maxX)
-            {
-                if (_map[_pos.Y, x++] != ' ') break;
-            }
-
-            _pos = new Point(x--, _pos.Y);
-        }
-
-        private bool IsGrid()
-        {
-            return _map[_pos.Y, _pos.X] != ' ';
         }
 
         private void TurnRight()
@@ -204,7 +172,7 @@ public class Day
             else _direction = Left;
         }
 
-        public void Walk()
+        public long Walk()
         {
             var r = new Regex(@"(\d+|L|R)", RegexOptions.Compiled);
             var matches = r.Matches(_directions);
@@ -213,9 +181,11 @@ public class Day
                 if (m.Value == "R") TurnRight();
                 else if (m.Value == "L") TurnLeft();
                 else Move(int.Parse(m.Value));
+                //Console.ReadLine();
             }
-
-            Console.WriteLine(_pos);
+            Draw();
+            var dirC = _direction.Equals(Right) ? 0 : _direction.Equals(Left) ? 2 : _direction.Equals(Up) ? 3 : 1;
+            return 1000 * (_pos.Y + 1) + 4 * (_pos.X + 1) + dirC;
         }
     }
 
