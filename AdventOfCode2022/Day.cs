@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using Helpers;
+using Newtonsoft.Json.Serialization;
 
 namespace AdventOfCode2022;
 
@@ -55,7 +56,7 @@ public class Day
             }
         }
 
-        private void Move(int amount)
+        private void Move(int amount, bool isPart2)
         {
             Console.WriteLine($"Move {amount}");
             for (int i = 0; i < amount; i++)
@@ -63,7 +64,7 @@ public class Day
                 _draw[_pos.Y, _pos.X] = DirectionInd();
 
                 //Draw();
-                var (can, next) = GetNextPos();
+                var (can, next) = isPart2 ? GetNextPosPart2() : GetNextPos();
                 if (!can) break;
                 var c = _map[next.Y, next.X];
                 if (c == '#') break;
@@ -94,12 +95,12 @@ public class Day
                 if (_pos.Y == 0 || _map[next.Y, next.X] == ' ')
                 {
                     var p = _pos + Down;
-                    while (p.Y < _maxY-1)
+                    while (p.Y < _maxY - 1)
                     {
                         if (At(p + Down) == ' ') return (At(p) == '.', p);
                         p += Down;
                     }
-                    
+
                     return (At(p) == '.', p);
                 }
 
@@ -108,7 +109,7 @@ public class Day
 
             if (_direction.Equals(Down))
             {
-                if (_pos.Y == _maxY-1 || _map[next.Y, next.X] == ' ')
+                if (_pos.Y == _maxY - 1 || _map[next.Y, next.X] == ' ')
                 {
                     var p = _pos + Up;
                     while (p.Y > 0)
@@ -116,7 +117,7 @@ public class Day
                         if (At(p + Up) == ' ') return (At(p) == '.', p);
                         p += Up;
                     }
-                    
+
                     return (At(p) == '.', p);
                 }
 
@@ -128,12 +129,12 @@ public class Day
                 if (_pos.X == 0 || _map[next.Y, next.X] == ' ')
                 {
                     var p = _pos + Right;
-                    while (p.X < _maxX-1)
+                    while (p.X < _maxX - 1)
                     {
                         if (At(p + Right) == ' ') return (At(p) == '.', p);
                         p += Right;
                     }
-                    
+
                     return (At(p) == '.', p);
                 }
 
@@ -141,7 +142,7 @@ public class Day
             }
 
             // Right
-            if (_pos.X == _maxX-1 || _map[next.Y, next.X] == ' ')
+            if (_pos.X == _maxX - 1 || _map[next.Y, next.X] == ' ')
             {
                 var p = _pos + Left;
                 while (p.X > 0)
@@ -149,8 +150,10 @@ public class Day
                     if (At(p + Left) == ' ') return (At(p) == '.', p);
                     p += Left;
                 }
+
                 return (At(p) == '.', p);
             }
+
             return (true, next);
         }
 
@@ -172,7 +175,7 @@ public class Day
             else _direction = Left;
         }
 
-        public long Walk()
+        public long Walk(bool isPart2 = false)
         {
             var r = new Regex(@"(\d+|L|R)", RegexOptions.Compiled);
             var matches = r.Matches(_directions);
@@ -180,12 +183,111 @@ public class Day
             {
                 if (m.Value == "R") TurnRight();
                 else if (m.Value == "L") TurnLeft();
-                else Move(int.Parse(m.Value));
+                else Move(int.Parse(m.Value), isPart2);
                 //Console.ReadLine();
             }
+
             Draw();
             var dirC = _direction.Equals(Right) ? 0 : _direction.Equals(Left) ? 2 : _direction.Equals(Up) ? 3 : 1;
+
             return 1000 * (_pos.Y + 1) + 4 * (_pos.X + 1) + dirC;
+        }
+
+        private const int CubeSize = 50;
+        private const int L1 = CubeSize;
+        private const int T1 = 0;
+        private const int T2 = 0;
+        private const int R2 = CubeSize * 3 - 1;
+        private const int B2 = CubeSize - 1;
+        private const int L3 = CubeSize;
+        private const int R3 = CubeSize * 2 - 1;
+        private const int L4 = 0;
+        private const int T4 = CubeSize * 2;
+        private const int R5 = CubeSize * 2 - 1;
+        private const int B5 = CubeSize * 3 - 1;
+        private const int L6 = 0;
+        private const int R6 = CubeSize - 1;
+        private const int B6 = CubeSize * 4 - 1;
+
+        private (bool can, Point next) GetNextPosPart2()
+        {
+            var next = _pos + _direction;
+            if (_direction.Equals(Up))
+            {
+                switch (_pos)
+                {
+                    case { Y: T1, X: >= CubeSize and < 2 * CubeSize }:
+                        return Can(L6, _pos.X + 2 * CubeSize, Right);
+
+                    case { Y: T2, X: >= 2 * CubeSize and < 3 * CubeSize }:
+                        return Can(_pos.X - 2 * CubeSize, B6, Up);
+
+                    case { Y: T4, X: >= 0 and < CubeSize }:
+                        return Can(L3, _pos.X + CubeSize, Right);
+                }
+            }
+
+            if (_direction.Equals(Down))
+            {
+                switch (_pos)
+                {
+                    case { Y: B2, X: >= 2 * CubeSize and < 3 * CubeSize }:
+                        return Can(R3, _pos.X - CubeSize, Left);
+
+                    case { Y: B5, X: >= CubeSize and < 2 * CubeSize }:
+                        return Can(R6, _pos.X + 2 * CubeSize, Left);
+
+                    case { Y: B6, X: >= 0 and < CubeSize }:
+                        return Can(_pos.X + 2 * CubeSize, T2, Down);
+                }
+            }
+
+            if (_direction.Equals(Left))
+            {
+                switch (_pos)
+                {
+                    case { X: L1, Y: >= 0 and < CubeSize }:
+                        return Can(L4, _pos.Y + 2 * CubeSize, Right);
+
+                    case { X: L3, Y: >= CubeSize and < 2 * CubeSize }:
+                        return Can(_pos.Y - CubeSize, T4, Down);
+
+                    case { X: L4, Y: >= 2 * CubeSize and < 3 * CubeSize }:
+                        return Can(L1, _pos.Y - 2 * CubeSize, Right);
+
+                    case { X: L6, Y: >= 3 * CubeSize and < 4 * CubeSize }:
+                        return Can(_pos.Y - 2 * CubeSize, T1, Down);
+                }
+            }
+
+            if (_direction.Equals(Right))
+            {
+                switch (_pos)
+                {
+                    case { X: R2, Y: >= 0 and < CubeSize }:
+                        return Can(R5, _pos.Y + 2 * CubeSize, Left);
+
+                    case { X: R3, Y: >= CubeSize and < 2 * CubeSize }:
+                        return Can(_pos.Y + CubeSize, B2, Up);
+
+                    case { X: R5, Y: >= 2 * CubeSize and < 3 * CubeSize }:
+                        return Can(R2, _pos.Y - 2 * CubeSize, Left);
+
+                    case { X: R6, Y: >= 3 * CubeSize and < 4 * CubeSize }:
+                        return Can(_pos.Y - 2 * CubeSize, B5, Up);
+                }
+            }
+
+            return (At(next) == '.', next);
+        }
+
+        private (bool can, Point next) Can(int x, int y, Point dir)
+        {
+            var next = new Point(x, y);
+            if (_map[y, x] == '#') return (false, next);
+
+            _direction = dir;
+            return (true, next);
         }
     }
 
@@ -193,6 +295,8 @@ public class Day
     {
         long result = 0;
 
+        var puzzle = new Puzzle(input.Take(input.Length - 2).ToList(), input.Last());
+        result = puzzle.Walk(true);
 
         return result;
     }
