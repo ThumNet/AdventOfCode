@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 
 // ReSharper disable once CheckNamespace
@@ -22,6 +24,14 @@ public static class SystemExtensions
     /// Retrieve both min and max from 2 values
     /// </summary>
     public static (int min, int max) MinMax(this int value, int otherValue)
+    {
+        return value > otherValue ? (otherValue, value) : (value, otherValue);
+    }
+    
+    /// <summary>
+    /// Retrieve both min and max from 2 values
+    /// </summary>
+    public static (long min, long max) MinMax(this long value, long otherValue)
     {
         return value > otherValue ? (otherValue, value) : (value, otherValue);
     }

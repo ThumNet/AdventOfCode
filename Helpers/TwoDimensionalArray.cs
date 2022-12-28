@@ -1,4 +1,8 @@
 // ReSharper disable once CheckNamespace
+
+using System.Collections.Generic;
+using System.Linq;
+
 namespace System;
 
 public static class TwoDimensionalArray

@@ -2,201 +2,183 @@ namespace AdventOfCode2022;
 
 public class Day17
 {
-    public enum RockTypes
+    private class Point
     {
-        // ####
-        HLine = 0,
-        //  #
-        // ###
-        //  #
-        Plus,
-        //   #
-        //   #
-        // ###
-        L,
-        // #
-        // #
-        // #
-        // #
-        VLine,
-        // ##
-        // ##
-        Box
+        protected bool Equals(Point other)
+        {
+            return X == other.X && Y == other.Y;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Point)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(X, Y);
+        }
+
+        public Point(long x, long y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        public long X { get; set; }
+        public long Y { get; set; }
+    }
+    
+    private static HashSet<Point> GetRock(int rockIx, long y)
+    {
+        return rockIx switch
+        {
+            0 => new HashSet<Point> { new(2, y), new(3, y), new(4, y), new(5, y) },
+            1 => new HashSet<Point> { new(3, y + 2), new(2, y + 1), new(3, y + 1), new(4,y+1), new(3, y) },
+            2 => new HashSet<Point> { new(4, y + 2), new(4, y + 1), new(2, y), new(3, y), new(4, y) },
+            3 => new HashSet<Point> { new(2, y + 3), new(2, y + 2), new(2, y + 1), new(2, y) },
+            _ => new HashSet<Point> { new(2, y + 1), new(3, y + 1), new(2, y), new(3, y) }
+        };
     }
 
-    public class FallingRock
+    private static void MoveLeft(HashSet<Point> rock)
     {
-        public FallingRock(RockTypes type, int level)
-        {
-            Left = 2;
-            Type = type;
-            Level = level;
-        }
+        if (rock.Any(p => p.X == 0)) return;
+        foreach (var p in rock) p.X -= 1;
+    }
 
-        public RockTypes Type { get; }
-        public int Level { get; set; }
+    private static void MoveRight(HashSet<Point> rock)
+    {
+        if (rock.Any(p => p.X == 6)) return;
+        foreach (var p in rock) p.X += 1;
+    }
 
-        public int Left { get; set; }
+    private static void MoveDown(HashSet<Point> rock)
+    {
+        foreach (var p in rock) p.Y -= 1;
+    }
 
-        public void Push(char direction)
-        {
-            if (direction == '<' && Left > 0) Left--;
-            if (direction == '>' && Left + Width() < 7) Left++;
-        }
-
-        public bool Fall(List<string> levels)
-        {
-            //if (Level == 0) return true;
-            
-            if (levels.Count < Level)
-            {
-                Level--;
-                return false;
-            }
-            
-            // now check if block fits on line
-            var rockLines = GetLineFilling();
-            if (levels.Count == 0)
-            {
-                levels.AddRange(rockLines);
-                return true;
-            }
-            
-            if (FitsOnLine(levels[Level-1], rockLines.Last()))
-            {
-                Level--;
-                return false;
-            }
-            
-            levels.AddRange(rockLines);
-            return true;
-        }
-
-        private bool FitsOnLine(string level, string rockLine)
-        {
-            if (level.Length != 7) throw new ArgumentOutOfRangeException(nameof(level), level);
-            if (rockLine.Length != 7) throw new ArgumentOutOfRangeException(nameof(rockLine), rockLine);
-            
-            for (int i = 0; i < 7; i++)
-            {
-                if (level[i] == '#' && rockLine[i] == '#') return false;
-            }
-
-            return true;
-        }
-
-        public string[] GetLineFilling()
-        {
-            var fill = new string(' ', Left);
-            return Type switch
-            {
-                RockTypes.HLine => new[] { Fill($"{fill}####") },
-                RockTypes.Plus => new[] { Fill($"{fill} #"), Fill($"{fill}###"), Fill($"{fill} #") },
-                RockTypes.L => new[] { Fill($"{fill}  #"), Fill($"{fill}  #"), Fill($"{fill}###") },
-                RockTypes.VLine => new[] { Fill($"{fill}#"), Fill($"{fill}#"),Fill($"{fill}#"),Fill($"{fill}#") },
-                RockTypes.Box => new[] { Fill($"{fill}##"), Fill($"{fill}##") },
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-
-        private string Fill(string input)
-        {
-            var len = input.Length;
-            if (len == 7) return input;
-            var add = 7 - len;
-            return input + new string(' ', add);
-        }
-
-        public int Width()
-        {
-            return Type switch
-            {
-                RockTypes.HLine => 4,
-                RockTypes.Plus => 3,
-                RockTypes.L => 3,
-                RockTypes.VLine => 1,
-                RockTypes.Box => 2,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-        
-        public int Height()
-        {
-            return Type switch
-            {
-                RockTypes.HLine => 1,
-                RockTypes.Plus => 3,
-                RockTypes.L => 3,
-                RockTypes.VLine => 4,
-                RockTypes.Box => 2,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
+    private static void MoveUp(HashSet<Point> rock)
+    {
+        foreach (var p in rock) p.Y += 1;
     }
 
     public class Game
     {
-        private List<string> _levels = new();
+        private HashSet<Point> _state = new()
+            { new(0, 0), new(1, 0), new(2, 0), new(3, 0), new(4, 0), new(5, 0), new(6, 0), };
 
-        public void Simulate(string pushes)
+        private long _top = 0;
+
+        public long Simulate(string pushes, long max)
         {
             var rockIx = 0;
-            var rock = new FallingRock((RockTypes)rockIx, 4);
-            Draw(rock);
-            do
+            var rock = GetRock(rockIx, _top + 4);
+            var i = 0;
+            var seen = new HashSet<(int oldI, int oldRockIx, long hash)>();
+
+            for (long r = 0; r < max; r++)
             {
-                foreach (var push in pushes)
+                while (true)
                 {
-                    if (rock.Fall(_levels))
+                    if (pushes[i] == '>')
                     {
-                        rockIx++;
-                        rock = new FallingRock((RockTypes)(rockIx % 5), _levels.Count + 4);
-                        Draw(rock);
+                        MoveRight(rock);
+                        if (_state.Overlaps(rock)) MoveLeft(rock);
+                    }
+                    else
+                    {
+                        MoveLeft(rock);
+                        if (_state.Overlaps(rock)) MoveRight(rock);
                     }
 
-                    rock.Push(push);
-                    Draw(rock);
+                    i = (i + 1) % pushes.Length;
+
+                    MoveDown(rock);
+                    if (_state.Overlaps(rock))
+                    {
+                        MoveUp(rock);
+                        foreach (var p in rock) _state.Add(p);
+                        RemoveExcess(rock, r, max);
+                        _top = _state.Max(r => r.Y);
+                        
+                        rockIx = (rockIx + 1) % 5;
+                        rock = GetRock(rockIx, _top + 4);
+                        //Draw(r);
+                        break;
+                    }
                 }
-            } while (rockIx <= 2022);
+            }
+
+            return _top;
         }
 
-        private void Draw(FallingRock rock)
+        private void RemoveExcess(HashSet<Point> rock, long ix, long max)
         {
-            Console.Clear();
-            foreach (var line in rock.GetLineFilling())
+            if (ix % 1000000 == 0)
             {
-                Console.WriteLine(line);
+                Console.WriteLine("{0:0.00}%",ix/(max * 1.0)*100);
             }
 
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
+            if (ix % 1000 == 0)
+            {
+                long y = _top - 1000; 
+                //Console.WriteLine($"Removing below {y}");
+                _state.RemoveWhere(p => p.Y < y);
+            }
             
-            _levels.Reverse();
-            foreach (var line in _levels)
+            // var ys = rock.Select(p => p.Y).Distinct();
+            // foreach (var y in ys)
+            // {
+            //     if (_state.Count(p => p.Y == y) == 7)
+            //     {
+            //         Console.WriteLine($"Removing below {y}");
+            //         _state.RemoveWhere(p => p.Y < y);
+            //         return;
+            //     }
+            // }
+        }
+
+        private void Draw(int rockNr)
+        {
+            Console.WriteLine($"Rock: {rockNr}");
+            for (var y = _top; y>=0; y--)
             {
+                var line = "";
+                for (long x = 0; x < 7; x++)
+                {
+                    line += _state.Contains(new Point(x, y)) ? '#' : ' ';
+                }
+
                 Console.WriteLine(line);
             }
 
-            _levels.Reverse();
+            Console.WriteLine();
         }
     }
-    
-    public int Challenge1(string[] input)
+
+    public long Challenge1(string[] input)
     {
-        int result = 0;
+        long result = 0;
 
         var pushes = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>";
         var g = new Game();
-        g.Simulate(pushes);
+        result = g.Simulate(pushes, 2022);
 
         return result;
     }
-    
-    public int Challenge2(string[] input)
-    {
-        int result = 0;
 
+    public long Challenge2(string[] input)
+    {
+        long result = 0;
+
+        var pushes = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>";
+        var g = new Game();
+        result = g.Simulate(pushes, 1000000000000);
+        
         return result;
     }
 }

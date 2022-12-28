@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Helpers;
 
 // https://www.redblobgames.com/pathfinding/a-star/implementation.html#csharp
