@@ -1,3 +1,6 @@
+using System.Collections.Immutable;
+using System.Security.Cryptography;
+
 namespace AdventOfCode2022;
 
 public class Day17
@@ -75,13 +78,14 @@ public class Day17
 
         public long Simulate(string pushes, long max)
         {
-            var rockIx = 0;
-            var rock = GetRock(rockIx, _top + 4);
             var i = 0;
-            var seen = new HashSet<(int oldI, int oldRockIx, long hash)>();
-
-            for (long r = 0; r < max; r++)
+            var seen = new Dictionary<(int oldI, int oldRockIx, int hash), (long oldR, long oldY)>();
+            long r = 0;
+            long added = 0;
+            while(r < max)
             {
+                var rock = GetRock((int)(r%5), _top + 4);
+
                 while (true)
                 {
                     if (pushes[i] == '>')
@@ -104,16 +108,28 @@ public class Day17
                         foreach (var p in rock) _state.Add(p);
                         RemoveExcess(rock, r, max);
                         _top = _state.Max(r => r.Y);
-                        
-                        rockIx = (rockIx + 1) % 5;
-                        rock = GetRock(rockIx, _top + 4);
-                        //Draw(r);
+
+                        var sr = (i, (int)(r%5), Signature());
+                        if (seen.ContainsKey(sr) && max > 2022 && added == 0)
+                        {
+                            var (oldR, oldTop) = seen[sr];
+                            var dtop = _top - oldTop;
+                            var dr = r - oldR;
+                            var amount = (max - _top) / dr;
+                            added += amount * dtop;
+                            r += amount * dr;
+                            seen.Clear();
+                        }
+
+                        seen[sr] = (r, _top);
                         break;
                     }
                 }
+
+                r++;
             }
 
-            return _top;
+            return _top + added;
         }
 
         private void RemoveExcess(HashSet<Point> rock, long ix, long max)
@@ -129,17 +145,6 @@ public class Day17
                 //Console.WriteLine($"Removing below {y}");
                 _state.RemoveWhere(p => p.Y < y);
             }
-            
-            // var ys = rock.Select(p => p.Y).Distinct();
-            // foreach (var y in ys)
-            // {
-            //     if (_state.Count(p => p.Y == y) == 7)
-            //     {
-            //         Console.WriteLine($"Removing below {y}");
-            //         _state.RemoveWhere(p => p.Y < y);
-            //         return;
-            //     }
-            // }
         }
 
         private void Draw(int rockNr)
@@ -158,13 +163,19 @@ public class Day17
 
             Console.WriteLine();
         }
+
+        private int Signature()
+        {
+            var maxY = _state.Max(r => r.Y);
+            return _state.Where(r => maxY - r.Y <= 30).GetHashCode();
+        }
     }
 
     public long Challenge1(string[] input)
     {
         long result = 0;
 
-        var pushes = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>";
+        var pushes = input[0];
         var g = new Game();
         result = g.Simulate(pushes, 2022);
 
@@ -175,7 +186,7 @@ public class Day17
     {
         long result = 0;
 
-        var pushes = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>";
+        var pushes = input[0];
         var g = new Game();
         result = g.Simulate(pushes, 1000000000000);
         
