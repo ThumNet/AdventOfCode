@@ -57,6 +57,8 @@ public class Day04
         {
             return Yours.Intersect(Winning).Count();
         }
+
+        public int CardCount { get; set; } = 1;
     }
     
     public long Challenge2(string[] input)
@@ -68,18 +70,26 @@ public class Day04
         for (int o = 0; o < originalCards.Count; o++)
         {
             var overlapping = originalCards[o].OverlappingNumbers();
-            Console.WriteLine($"{overlapping} => {counts[o]}");
-            for (var i = 1; i<= overlapping; i++)
+            Console.WriteLine($"looking {o+1} => overlap {originalCards[o].OverlappingNumbers()} : copies {originalCards[o].CardCount}");
+            for (int c = 0; c < originalCards[o].CardCount; c++)
             {
-                if (o+i < originalCards.Count)
+                for (var i = 1; i<= overlapping; i++)
                 {
-                    counts[o+i] += counts[o+i];
+                    if (o+i < originalCards.Count)
+                    {
+                        var card = originalCards[o + i];
+                    
+                        card.CardCount +=1;
+                        // Console.WriteLine($"card {card.Nr} #{card.CardCount}");
+                    }
                 }
             }
-            counts.Dump();
+            
         }
 
-        result = input.Length + counts.Sum();
+        //originalCards.Dump();
+
+        result = originalCards.Sum(x => x.CardCount);
         return result;
     }
 }
