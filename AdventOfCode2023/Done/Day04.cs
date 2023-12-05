@@ -66,7 +66,6 @@ public class Day04
         long result = 0;
 
         var originalCards = input.Select(ScratchCard.FromLine).ToList();
-        var counts = Enumerable.Repeat(1, originalCards.Count).ToArray();
         for (int o = 0; o < originalCards.Count; o++)
         {
             var overlapping = originalCards[o].OverlappingNumbers();
