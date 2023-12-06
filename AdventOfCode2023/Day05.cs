@@ -95,7 +95,7 @@ public class Day05
 
         public bool IsContainedBy(long x)
         {
-            return Source <= x && x <= (Source + Range);
+            return Source <= x && x < (Source + Range);
         }
 
         public long Convert(long src)
@@ -105,29 +105,54 @@ public class Day05
         }
     }
     
-    
-    
     public long Challenge2(string[] input)
     {
         long result = 0;
-        var seedRanges = input[0][6..].Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToList();
+        var seedRanges = input[0][6..].Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToArray();
         var maps = ParseMaps(input);
-
-        long lowest = long.MaxValue;
-        for (var i = 0; i < seedRanges.Count; i += 2)
+        var revertedMaps = Revert(maps);
+        var ranges = new List<(long, long)>();
+        for (var i = 0; i < seedRanges.Length; i += 2)
         {
-            Console.WriteLine(seedRanges[i] + " with range "  + seedRanges[i+1]);
-            for (var j = 0; j < seedRanges[i+1]; j++)
+            ranges.Add((seedRanges[i], seedRanges[i] + seedRanges[i+1]));
+        }
+
+        
+        for (long i = 5000000; i < 100000000; i++)
+        {
+            long x = ConvertWithMaps(revertedMaps, i);
+            var r = ranges.Exists(r => r.Item1 <= x && x < r.Item2);
+            if (r)
             {
-                long x = ConvertWithMaps(maps, seedRanges[i] + j);
-                if (x < lowest)
-                {
-                    lowest = x;
-                }
+                ConvertWithMaps(maps, x).Dump();
+                Console.WriteLine(i);
+                break;
             }
         }
 
-        result = lowest;
         return result;
+    }
+
+    private List<Map> Revert(List<Map> maps)
+    {
+        var reverted = new List<Map>();
+        foreach (var m in maps)
+        {
+            reverted.Insert(0, new Map
+            {
+                From = m.To,
+                To = m.From,
+                Ranges = m.Ranges.Select(r => new MappedRange
+                {
+                    Dest = r.Source,
+                    Source = r.Dest,
+                    Range = r.Range
+                }).ToList()
+            });
+        }
+        
+        reverted.Dump();
+
+        return reverted;
     }
 }
