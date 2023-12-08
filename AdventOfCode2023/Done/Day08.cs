@@ -1,4 +1,5 @@
 using System.Numerics;
+using Helpers;
 
 namespace AdventOfCode2023;
 
@@ -61,6 +62,33 @@ public class Day08
 
         result = max;
         return result;
+    }
+    
+    public BigInteger Challenge2_WithMathHelpers(string[] input)
+    {
+        BigInteger result = 0;
+        
+        var directions = input[0].ToArray();
+        var map = ParseMap(input);
+        var starts = map.Keys.Where(k => k.EndsWith('A')).ToArray();
+        var ends = map.Keys.Where(k => k.EndsWith('Z')).ToArray();
+
+        var costs = new Dictionary<(string start, string end), long>();
+        foreach (var s in starts)
+        {
+            foreach (var e in ends)
+            {
+                var need = StepsNeeded(s, e, directions, map);
+                if (need != 0)
+                {
+                    costs[(s, e)] = need;
+                    Console.WriteLine($"{s} -> {e} = {costs[(s, e)]}");
+                }
+            }
+        }
+
+        var nrs = costs.Values.ToArray();
+        return nrs.LeastCommonMultiple();
     }
 
     public static long StepsNeeded(string start, string end, char[] directions, Dictionary<string, (string, string)> map)
