@@ -1,6 +1,6 @@
 namespace AdventOfCode2023;
 
-public class Day09
+public class Day10
 {
     public long Challenge1(string[] input)
     {

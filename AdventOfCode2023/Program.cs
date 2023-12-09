@@ -3,7 +3,7 @@ using AdventOfCode2023;
 
 var input = File.ReadAllLines(@"input.txt");
 
-var day = new Day09();
+var day = new Day10();
 
 var sw = Stopwatch.StartNew();
 Console.WriteLine($"Challenge 1: {day.Challenge1(input)}");
